@@ -1,0 +1,108 @@
+================================================================================
+=== Basic Usage ================================================================
+================================================================================
+The autoclear plugin lets you set default text for text input fields. There are 
+many out there, but this one is the best.
+
+The simplest way to get going with autoclear is to set up your input fields as 
+follows:
+  <input type="text" name="name" value="Name" />
+  <input type="text" name="age" value="Age" />
+and let autoclear do the rest of the work with:
+  $('input:text').autoclear();
+  
+That's all there is to it!
+  
+By default, autoclear will add a "default" class to those text fields that are 
+showing the default value and a class of "other" for those that aren't. 
+using this, we can apply some simple CSS rules to help the user differentiate 
+between them.
+  .default {
+    color: #FF0000; 
+  }
+  
+Lovely.
+
+What about the scenario where you're showing something like an edit form; i.e 
+you want some other values to appear in the field to start off, but when these 
+get cleared, you want to continue using autoclear. Whilst most auto-clearing 
+plugins will cry at this point, with autoclear it's easy!
+
+Autoclear first checks the title attribute of the input field for a value. 
+If one is set, this is used as the "default" text. If none is set, it will 
+prefer the "value" field. If this is also empty, it will finally fall back 
+to whatever the "defaultValue" is set to in autoclear's settings; but we'll 
+come onto those in a second.
+  <input type="text" title="Name" value="Amy"/>
+
+In the above example, "Amy" is shown when the page first loads, but as soon as 
+the user clears this text, "Name" is shown as you would expect.
+
+Just to clarify; the order of preference:
+  title
+  value
+  settings.defaultValue
+
+================================================================================
+=== Advanced Usage =============================================================
+================================================================================
+autoclear accepts up to two parameters.
+
+.autoclear([callbackFunction]);
+.autoclear(defaultClass[, callbackFunction]);
+.autoclear(settingsObject[, callbackFunction]);
+
+callbackFunction is the function executed each time the input field 
+changes between showing the "default" text and some other value. The function 
+receives one parameter; a string of either "default" or "other"; depending on 
+what is now being shown in the field. Inside the function 'this' refers to the 
+DOM element.
+
+defaultClass is a string that is used as the class name when the input field is 
+showing the "default" value. If this is omitted, it will apply the "default" 
+class.
+
+settingsObject is a map that defines and overrides the various settings of 
+autoclear. Valid values are as follows:
+
+Setting               Type      Default   Definition
+defaultClass          String    default   The class applied when the input field
+                                          is showing the "default" text
+otherClass            String    other     The class applied when the input field
+                                          is showing something other than the 
+                                          "default" text
+defaultValue          String              The value used as the "default" text. 
+                                          This value is only used if both the 
+                                          title and value attributes of the 
+                                          input field are undefined
+useDefaultOnReset     Boolean   true      If the input field was in the form 
+                                          <input type="text" title="Name" 
+                                                             value="Amy"/>, 
+                                          if the form is reset should the value 
+                                          be set to "Name" (true) or "Amy" 
+                                          (false).
+clearDefaultOnSubmit  Boolean   true      When the form is submitted, if the 
+                                          value of the input field is the 
+                                          default value, should it be cleared to
+                                          '' before it is sent to the server?
+callback              Function            Function to be executed each time the 
+                                          input field changes between showing 
+                                          the "default" text and some other 
+                                          value. The function receives one 
+                                          parameter; a string of either 
+                                          "default" or "other"; depending on 
+                                          what is now being shown in the field. 
+                                          Inside the function 'this' refers to 
+                                          the DOM element.
+
+================================================================================
+=== Contact &amp; Credits ======================================================
+================================================================================
+The autoclear plugin was created by Matt Lunn. (c) 2010.
+Edit the code as much as you want, but please recognise me as the original
+author, and above all; release your changes back into the public domain.
+
+Please direct any questions, comments, problems or feedback to:
+contact@mattlunn.me.uk
+
+Head over to www.mattlunn.me.uk/projects/autoclear for further help.
