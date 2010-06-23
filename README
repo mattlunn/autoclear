@@ -48,15 +48,8 @@ Just to clarify; the order of preference:
 ================================================================================
 autoclear accepts up to two parameters.
 
-.autoclear([callbackFunction]);
-.autoclear(defaultClass[, callbackFunction]);
-.autoclear(settingsObject[, callbackFunction]);
-
-callbackFunction is the function executed each time the input field 
-changes between showing the "default" text and some other value. The function 
-receives one parameter; a string of either "default" or "other"; depending on 
-what is now being shown in the field. Inside the function 'this' refers to the 
-DOM element.
+.autoclear(defaultClass);
+.autoclear(settingsObject);
 
 defaultClass is a string that is used as the class name when the input field is 
 showing the "default" value. If this is omitted, it will apply the "default" 
@@ -85,15 +78,6 @@ clearDefaultOnSubmit  Boolean   true      When the form is submitted, if the
                                           value of the input field is the 
                                           default value, should it be cleared to
                                           '' before it is sent to the server?
-callback              Function            Function to be executed each time the 
-                                          input field changes between showing 
-                                          the "default" text and some other 
-                                          value. The function receives one 
-                                          parameter; a string of either 
-                                          "default" or "other"; depending on 
-                                          what is now being shown in the field. 
-                                          Inside the function 'this' refers to 
-                                          the DOM element.
 
 ================================================================================
 === Contact &amp; Credits ======================================================

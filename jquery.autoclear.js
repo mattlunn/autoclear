@@ -6,110 +6,101 @@
  * reference, @see http://www.mattlunn.me.uk/projects/autoclear
  *
  * @author Matt Lunn
- * @version 1.0
- * @param  Object / String / Function
- * @param  Function
+ * @version 2
+ * @param  Object / String
  * @return Object jQuery
  * @see http://www.mattlunn.me.uk/projects/autoclear
  * @see README 
  */
-(function ($) {
-  jQuery.fn.autoclear = function (params, callback) {
-    var settings = {
-      defaultClass: 'default',
-      otherClass: 'other',
-      defaultValue: '',
-      useDefaultOnReset: true,
-      clearDefaultOnSubmit: true,
-      callback: jQuery.noop
-    };
-    
-    if (arguments.length) {
-      if (typeof params === "string") {
-        settings.defaultClass = params;
-      } else if (typeof params === "object") {
-        settings = jQuery.extend(settings, params);
-      } else if (typeof params === "function") {
-        settings.callback = params;
-      };
-      
-      if (typeof callback === "function") {
-        settings.callback = callback;
-      };
-    };
+; (function ($) {
 
-    this.bind({
-      'focus.autoclear blur.autoclear': function (event) {
-        var self = $(this),
-            currentValue = jQuery.trim(this.value),
-            defaultValue = this.title;
-            
-        if (event.type === "focus") {
-          if (currentValue === defaultValue) {
-            self.trigger('clear.autoclear');
-          };
-        } else {
-          if (currentValue === "" || currentValue === defaultValue) {
-            self.trigger('default.autoclear');
-          };
-        };
-      },
-      'clear.autoclear': function () {
-        var self = $(this);
-        
-        this.value = '';
+	function isBlank (prop) {
+		return prop === undefined || prop === '';
+	};
+ 
+	jQuery.fn.autoclear = function (options) {
+		var settings = {
+			defaultClass: 'default',
+			otherClass: 'other',
+			defaultValue: '',
+			useDefaultOnReset: true,
+			clearDefaultOnSubmit: true
+		};
+		
+		if (arguments.length) {
+			switch (typeof options) {
+			case "string":
+				settings.defaultClass = options;
+			break;
+			case "object":
+				settings = jQuery.extend(settings, options);
+			break;
+			};
+		};
+		
+		this.filter('input:text,textarea').each(function () {
+			var self = $(this);
+			var defaultValue = self.attr('title');
+			var form = self.closest('form');
 
-        if (!self.hasClass(settings.otherClass)) {
-          self.removeClass(settings.defaultClass).addClass(settings.otherClass);
-          settings.callback.call(this, 'clear');
-        };
-      },
-      'default.autoclear': function () {
-        var self = $(this);
-        
-        this.value = this.title;
+			if (isBlank(defaultValue)) {
+				if (self.val() === '') {
+					defaultValue = settings.defaultValue;
+				} else {
+					defaultValue = self.val();
+				};
+			};
 
-        if (!self.hasClass(settings.defaultClass)) {
-          self.removeClass(settings.otherClass).addClass(settings.defaultClass);
-          settings.callback.call(this, 'default');
-        };
-      }
-    });
-    
-    this.each(function () {
-      var self = $(this),
-          form = self.closest('form');
-      
-      function set(el, val) {
-        return el[val] !== undefined && el[val] !== "";
-      };
-      
-      if (settings.useDefaultOnReset) {
-        this.value = this.defaultValue;
-        this.defaultValue = this.title;
+			self.data('default.autoclear', defaultValue);			
 
-        form.bind('reset.autoclear', function () {
-          self.trigger('default.autoclear');
-        });
-      };
-      
-      if (settings.clearDefaultOnSubmit) {
-        form.bind('submit.autoclear', function () {
-          self.trigger('focus.autoclear');
-        });
-      };      
-      
-      if (!set(this, 'title') && !set(this, 'value')) {
-        this.title = settings.defaultValue;
-        self.trigger('default.autoclear');
-      } if (!set(this, 'title')) {
-        this.title = this.value;
-        self.trigger('default.autoclear');
-      } else if (!set(this, 'value')) {
-        self.trigger('default.autoclear');
-      } else {
-        self.addClass(settings.otherClass);
-      };
-    });
-  };
+			form.bind('reset', function () {
+				if (settings.useDefaultOnReset) {
+					self.trigger('default');
+				} else {
+					self.val(self.attr('defaultValue')).trigger('blur');
+				};
+			});
+			
+			if (settings.useDefaultOnReset || isBlank(jQuery.trim(self.attr('defaultValue')))) {
+				self.val(self.val()).attr('defaultValue', defaultValue);
+			};
+			
+			if (settings.clearDefaultOnSubmit) {
+				form.bind('submit', function () {
+					self.trigger('focus');
+				});
+			};
+		}).bind({
+			'focus.autoclear': function () {
+				var self = $(this);
+				
+				if (self.val() == self.data('default.autoclear')) {
+					self.val('').trigger('other');
+				};
+			},
+			'blur.autoclear': function () {
+				var self = $(this);
+				var value = jQuery.trim(self.val());
+
+				if (value === self.data('default.autoclear') || value === '') {
+					self.trigger('default');
+				} else {
+					self.trigger('other');
+				};
+			},
+			'default.autoclear': function () {
+				var self = $(this);
+				
+				self.val(self.data('default.autoclear')).removeClass(settings.otherClass).addClass(settings.defaultClass);
+			},
+			'other.autoclear': function () {
+				var self = $(this);
+				
+				self.removeClass(settings.defaultClass).addClass(settings.otherClass);
+			}
+		}).trigger('blur');
+		
+		return this;
+	};
+	
 }(jQuery));
