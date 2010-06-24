@@ -6,18 +6,18 @@
  * reference, @see http://www.mattlunn.me.uk/projects/autoclear
  *
  * @author Matt Lunn
- * @version 2
+ * @version 3
  * @param  Object / String
  * @return Object jQuery
  * @see http://www.mattlunn.me.uk/projects/autoclear
- * @see README 
+ * @see README
  */
 ; (function ($) {
 
 	function isBlank (prop) {
 		return prop === undefined || prop === '';
 	};
- 
+
 	jQuery.fn.autoclear = function (options) {
 		var settings = {
 			defaultClass: 'default',
@@ -41,16 +41,17 @@
 		this.filter('input:text,textarea').each(function () {
 			var self = $(this);
 			var defaultValue = self.attr('title');
+			var currentValue = self.val();
 			var form = self.closest('form');
 
 			if (isBlank(defaultValue)) {
-				if (self.val() === '') {
+				if (currentValue === '') {
 					defaultValue = settings.defaultValue;
 				} else {
-					defaultValue = self.val();
+					defaultValue = currentValue;
 				};
 			};
-
+			
 			self.data('default.autoclear', defaultValue);			
 
 			form.bind('reset', function () {
@@ -62,7 +63,7 @@
 			});
 			
 			if (settings.useDefaultOnReset || isBlank(jQuery.trim(self.attr('defaultValue')))) {
-				self.val(self.val()).attr('defaultValue', defaultValue);
+				self.attr('defaultValue', defaultValue).val(currentValue);
 			};
 			
 			if (settings.clearDefaultOnSubmit) {
