@@ -42,6 +42,14 @@ Just to clarify; the order of preference:
   title
   value
   settings.defaultValue
+  
+The autoclear plugin also extends the native jQuery.fn.val() function as well. 
+If the contents of an autoclearing-textfield is retrieved using val(), and the
+default text is being displayed, val() will intelligently return ''. If an 
+autoclearing-textfield is showing the helper text, and you use val() to change 
+it to a valid value, autoclear will alter the styling accordingly. If you set 
+input value to be '' using val(''), autoclear will intelligently change the
+value to the default text, and apply the appropiate styling.
 
 ================================================================================
 === Advanced Usage =============================================================

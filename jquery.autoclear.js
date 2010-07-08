@@ -6,7 +6,7 @@
  * reference, @see http://www.mattlunn.me.uk/projects/autoclear
  *
  * @author Matt Lunn
- * @version 3
+ * @version 5
  * @param  Object / String
  * @return Object jQuery
  * @see http://www.mattlunn.me.uk/projects/autoclear
@@ -14,94 +14,199 @@
  */
 ; (function ($) {
 
-	function isBlank (prop) {
-		return prop === undefined || prop === '';
-	};
+    // Reference to the val function we will be overwriting
+    var _val = jQuery.fn.val;
+    var slice = [].slice;
 
-	jQuery.fn.autoclear = function (options) {
-		var settings = {
-			defaultClass: 'default',
-			otherClass: 'other',
-			defaultValue: '',
-			useDefaultOnReset: true,
-			clearDefaultOnSubmit: true
-		};
-		
-		if (arguments.length) {
-			switch (typeof options) {
-			case "string":
-				settings.defaultClass = options;
-			break;
-			case "object":
-				settings = jQuery.extend(settings, options);
-			break;
-			};
-		};
-		
-		this.filter('input:text,textarea').each(function () {
-			var self = $(this);
-			var defaultValue = self.attr('title');
-			var currentValue = self.val();
-			var form = self.closest('form');
+    /**
+     * Helper function which detects whether the provided value is either
+     * undefined or prop.
+     *
+     * @author Matt
+     * @param 	prop	String	Property to check
+     * @return	Boolean	Is it blank?
+     */
+    function isBlank (prop) {
+        return prop === undefined || prop === '';
+    };
 
-			if (isBlank(defaultValue)) {
-				if (currentValue === '') {
-					defaultValue = settings.defaultValue;
-				} else {
-					defaultValue = currentValue;
-				};
-			};
-			
-			self.data('default.autoclear', defaultValue);			
+    /**
+     * Helper value which applies the native jQuery val method to the provided
+     * jQuery object, rather than applying our custom val method that we replace
+     * the native val with
+     *
+     * @author Matt
+     * @param el	Object	jQuery object to apply val to
+     * @param arg	Mixed	Optional: Parameter that will be passed to val
+     * @return Mixed		Result of applying val to the jQuery Object
+     */
+    function val(el) {
+        return _val.apply(el, slice.call(arguments, 1));
+    };
 
-			form.bind('reset', function () {
-				if (settings.useDefaultOnReset) {
-					self.trigger('default');
-				} else {
-					self.val(self.attr('defaultValue')).trigger('blur');
-				};
-			});
-			
-			if (settings.useDefaultOnReset || isBlank(jQuery.trim(self.attr('defaultValue')))) {
-				self.attr('defaultValue', defaultValue).val(currentValue);
-			};
-			
-			if (settings.clearDefaultOnSubmit) {
-				form.bind('submit', function () {
-					self.trigger('focus');
-				});
-			};
-		}).bind({
-			'focus.autoclear': function () {
-				var self = $(this);
-				
-				if (self.val() == self.data('default.autoclear')) {
-					self.val('').trigger('other');
-				};
-			},
-			'blur.autoclear': function () {
-				var self = $(this);
-				var value = jQuery.trim(self.val());
+    /**
+     * Custom val function. This will still act exactly the same as the native
+     * jQuery val function, however if a set operation is carried out with val,
+     * the default style/ text will be applied if the value is set to '', and
+     * the default style will be removed if the value is changed from '' to a
+     * valid value. If a get operation is carried out, and the input is
+     * currently showing the default value, '' will be returned instead of the
+     * default helper text.
+     *
+     * @author Matt
+     * @see link		http://api.jquery.com/val
+     * @param Mixed		Any mixture of valid arguments for native val
+     * @return Mixed	Result of native val
+     */
+    jQuery.fn.val = function () {
+        var result = val(this);
+        var defaultValue;
 
-				if (value === self.data('default.autoclear') || value === '') {
-					self.trigger('default');
-				} else {
-					self.trigger('other');
-				};
-			},
-			'default.autoclear': function () {
-				var self = $(this);
-				
-				self.val(self.data('default.autoclear')).removeClass(settings.otherClass).addClass(settings.defaultClass);
-			},
-			'other.autoclear': function () {
-				var self = $(this);
-				
-				self.removeClass(settings.defaultClass).addClass(settings.otherClass);
-			}
-		}).trigger('blur');
-		
-		return this;
-	};
-	
+        // Getter
+        if (typeof result === "string") {
+            defaultValue = this.first().data('default.autoclear');
+
+            if (defaultValue !== undefined && result === defaultValue) {
+                result = '';
+            };
+        } else {
+        // Setter
+
+            this.each(function () {
+                var self = $(this);
+                var defaultValue = self.data('default.autoclear');
+
+                if (defaultValue !== undefined && self.val() === '') {
+                    self.trigger('default.autoclear');
+                } else {
+                    self.trigger('other.autoclear');
+                };
+            });
+        };
+
+        return result;
+    };
+
+    /**
+     * The actual autoclear functionality
+     *
+     * @author Matt Lunn
+     * @param  Object / String
+     * @return Object jQuery
+     * @see http://www.mattlunn.me.uk/projects/autoclear
+     * @see README
+     */
+    jQuery.fn.autoclear = function (options) {
+        var settings = {
+            defaultClass: 'default',
+            otherClass: 'other',
+            defaultValue: '',
+            useDefaultOnReset: true,
+            clearDefaultOnSubmit: true
+        };
+
+        if (arguments.length) {
+            switch (typeof options) {
+            case "string":
+                settings.defaultClass = options;
+            break;
+            case "object":
+                settings = jQuery.extend(settings, options);
+            break;
+            };
+        };
+
+        this.filter('input:text,textarea').each(function () {
+            // self caches $(this) for optimization
+            var self = $(this);
+            // The parent form of the input field.
+            var form = self.closest('form');
+            // The current value held by the input field
+            var currentValue = jQuery.trim(val(self));
+            // Holds the value chosen to show as the helper text
+            var defaultValue = self.attr('title');
+
+            // Calculate the actual defaultValue. If `title` is empty, we take
+            // the current value of the input field unless it's empty, in which
+            // case we fall back to the defaultValue in the settings object.
+            if (isBlank(defaultValue)) {
+                if (currentValue === '') {
+                    defaultValue = settings.defaultValue;
+                } else {
+                    defaultValue = currentValue;
+                };
+            };
+
+            // Set the default value
+            self.data('default.autoclear', defaultValue);			
+
+            // When the form is reset, if useDefaultOnReset is true, we need to
+            // set the applied styles of the input field to be default.
+            // Otherwise, we need to make sure that the appropiate style is
+            // applied to whatever the default value was. self.val() will apply
+            // the styles itself.
+            form.bind('reset.autoclear', function () {
+                var expectedValue;
+
+                if (settings.useDefaultOnReset) {
+                    expectedValue = '';
+                } else {
+                    expectedValue = self.attr('defaultValue');
+                };
+
+                self.val(expectedValue);
+            });
+
+            // If we are have useDefaultOnReset, or there is no defaultValue,
+            // set the defaultValue to the helper text. This is so that if a
+            // form reset occurs, the intended value is set.
+            if (settings.useDefaultOnReset
+                || isBlank(jQuery.trim(self.attr('defaultValue')))) {
+
+                self.attr('defaultValue', defaultValue).val(currentValue);
+            };
+
+            // If we dont want to submit default values, trigger the focussing
+            // of the input on submit; this will clear the default text if it is
+            // set.
+            if (settings.clearDefaultOnSubmit) {
+                form.bind('submit.autoclear', function () {
+                    self.trigger('focus.autoclear');
+                });
+            };
+        }).bind({
+            'focus.autoclear': function () {
+                var self = $(this);
+
+                if (self.val() === '') {
+                    val(self, '').trigger('other.autoclear');
+                };
+            },
+            'blur.autoclear': function () {
+                var self = $(this);
+                var value = jQuery.trim(val(self));
+
+                if (value === '') {
+                    self.trigger('default.autoclear');
+                } else {
+                    self.trigger('other.autoclear');
+                };
+            },
+            'default.autoclear': function () {
+                var self = $(this).removeClass(settings.otherClass)
+                                  .addClass(settings.defaultClass);
+
+                val(self, self.data('default.autoclear'));
+            },
+            'other.autoclear': function () {
+                var self = $(this);
+
+                self.removeClass(settings.defaultClass).
+                     addClass(settings.otherClass);
+            }
+        }).trigger('blur.autoclear');
+
+        return this;
+    };
+
 }(jQuery));
