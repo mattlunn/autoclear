@@ -6,86 +6,16 @@
  * reference, @see http://www.mattlunn.me.uk/projects/autoclear
  *
  * @author Matt Lunn
- * @version 5
+ * @version 6
  * @param  Object / String
  * @return Object jQuery
  * @see http://www.mattlunn.me.uk/projects/autoclear
  * @see README
  */
 ; (function ($) {
-
-    // Reference to the val function we will be overwriting
+    // Reference to the val function we will be extending
     var _val = jQuery.fn.val;
     var slice = [].slice;
-
-    /**
-     * Helper function which detects whether the provided value is either
-     * undefined or prop.
-     *
-     * @author Matt
-     * @param 	prop	String	Property to check
-     * @return	Boolean	Is it blank?
-     */
-    function isBlank (prop) {
-        return prop === undefined || prop === '';
-    };
-
-    /**
-     * Helper value which applies the native jQuery val method to the provided
-     * jQuery object, rather than applying our custom val method that we replace
-     * the native val with
-     *
-     * @author Matt
-     * @param el	Object	jQuery object to apply val to
-     * @param arg	Mixed	Optional: Parameter that will be passed to val
-     * @return Mixed		Result of applying val to the jQuery Object
-     */
-    function val(el) {
-        return _val.apply(el, slice.call(arguments, 1));
-    };
-
-    /**
-     * Custom val function. This will still act exactly the same as the native
-     * jQuery val function, however if a set operation is carried out with val,
-     * the default style/ text will be applied if the value is set to '', and
-     * the default style will be removed if the value is changed from '' to a
-     * valid value. If a get operation is carried out, and the input is
-     * currently showing the default value, '' will be returned instead of the
-     * default helper text.
-     *
-     * @author Matt
-     * @see link		http://api.jquery.com/val
-     * @param Mixed		Any mixture of valid arguments for native val
-     * @return Mixed	Result of native val
-     */
-    jQuery.fn.val = function () {
-        var result = val(this);
-        var defaultValue;
-
-        // Getter
-        if (typeof result === "string") {
-            defaultValue = this.first().data('default.autoclear');
-
-            if (defaultValue !== undefined && result === defaultValue) {
-                result = '';
-            };
-        } else {
-        // Setter
-
-            this.each(function () {
-                var self = $(this);
-                var defaultValue = self.data('default.autoclear');
-
-                if (defaultValue !== undefined && self.val() === '') {
-                    self.trigger('default.autoclear');
-                } else {
-                    self.trigger('other.autoclear');
-                };
-            });
-        };
-
-        return result;
-    };
 
     /**
      * The actual autoclear functionality
@@ -157,7 +87,7 @@
                 self.val(expectedValue);
             });
 
-            // If we are have useDefaultOnReset, or there is no defaultValue,
+            // If we have useDefaultOnReset, or there is no defaultValue,
             // set the defaultValue to the helper text. This is so that if a
             // form reset occurs, the intended value is set.
             if (settings.useDefaultOnReset
@@ -184,7 +114,7 @@
             },
             'blur.autoclear': function () {
                 var self = $(this);
-                var value = jQuery.trim(val(self));
+                var value = jQuery.trim(self.val());
 
                 if (value === '') {
                     self.trigger('default.autoclear');
@@ -193,8 +123,8 @@
                 };
             },
             'default.autoclear': function () {
-                var self = $(this).removeClass(settings.otherClass)
-                                  .addClass(settings.defaultClass);
+                var self = $(this).removeClass(settings.otherClass).
+                                   addClass(settings.defaultClass);
 
                 val(self, self.data('default.autoclear'));
             },
@@ -207,6 +137,76 @@
         }).trigger('blur.autoclear');
 
         return this;
+    };
+
+    /**
+     * Custom val function. This will still act exactly the same as the native
+     * jQuery val function, however if a set operation is carried out with val,
+     * the default style/ text will be applied if the value is set to '', and
+     * the default style will be removed if the value is changed from '' to a
+     * valid value. If a get operation is carried out, and the input is
+     * currently showing the default value, '' will be returned instead of the
+     * default helper text.
+     *
+     * @author Matt
+     * @see link		http://api.jquery.com/val
+     * @param Mixed		Any mixture of valid arguments for native val
+     * @return Mixed	Result of native val
+     */
+    jQuery.fn.val = function () {
+        var result = _val.apply(this, arguments);
+        var defaultValue;
+
+        // Getter
+        if (typeof result === "string") {
+            defaultValue = this.first().data    ('default.autoclear');
+
+            if (defaultValue !== undefined && result === defaultValue) {
+                result = '';
+            };
+        } else {
+        // Setter
+
+            this.each(function () {
+                var self = $(this);
+                var defaultValue = self.data('default.autoclear');
+
+                if (defaultValue !== undefined && self.val() === '') {
+                    self.trigger('default.autoclear');
+                } else {
+                    self.trigger('other.autoclear');
+                };
+            });
+        };
+
+        return result;
+    };
+
+    /**
+     * Helper function which detects whether the provided value is either
+     * undefined or an empty string.
+     *
+     * @author Matt
+     * @param 	prop	String	Property to check
+     * @return	Boolean	Is it blank?
+     */
+    function isBlank (prop) {
+        return prop === undefined || prop === '';
+    };
+
+    /**
+     * Helper value which applies the native jQuery val method to the provided
+     * jQuery object, rather than applying our custom val method that we replace
+     * the native val with. E.g if the value is the helper text, the helper text
+     * will be returned, rather than an empty string.
+     *
+     * @author Matt
+     * @param el	Object	jQuery object to apply val to
+     * @param arg	Mixed	Optional: Parameter that will be passed to val
+     * @return Mixed		Result of applying val to the jQuery Object
+     */
+    function val (el) {
+        return _val.apply(el, slice.call(arguments, 1));
     };
 
 }(jQuery));

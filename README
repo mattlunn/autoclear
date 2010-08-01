@@ -43,7 +43,7 @@ Just to clarify; the order of preference:
   value
   settings.defaultValue
   
-The autoclear plugin also extends the native jQuery.fn.val() function as well. 
+The autoclear plugin also extends the native jQuery.fn.val() function. 
 If the contents of an autoclearing-textfield is retrieved using val(), and the
 default text is being displayed, val() will intelligently return ''. If an 
 autoclearing-textfield is showing the helper text, and you use val() to change 
